@@ -2,8 +2,6 @@ name: Kernel Diff
 
 on:
   workflow_dispatch:
-  push:
-    branches: [ main ]
 
 jobs:
   diff:
@@ -21,17 +19,15 @@ jobs:
       run: |
         git clone --depth=1 https://android.googlesource.com/kernel/common -b android12-5.10-lts ack-5.10
 
-    - name: Compare trees (functions/drivers/headers/codes)
+    - name: Compare only include/ headers
       run: |
         mkdir diff-results
-        diff -ruN ack-5.4 ack-5.10 > diff-results/ack-5.4-vs-5.10.patch || true
-        grep -E '^[+-][[:space:]]*(static|int|void|long|char|struct|bool)[^()]*\([^\)]*\)' diff-results/ack-5.4-vs-5.10.patch \
-          > diff-results/functions-changes.txt || true
-        diff -ruN ack-5.4/include ack-5.10/include > diff-results/header-changes.patch || true
-        diff -ruN ack-5.4/drivers ack-5.10/drivers > diff-results/driver-changes.patch || true
+        diff -ruN ack-5.4/include ack-5.10/include > diff-results/include-changes.patch || true
+        grep -E '^[+-][[:space:]]*(static|inline|extern|int|void|long|char|struct|bool)[^()]*\([^\)]*\)' diff-results/include-changes.patch \
+          > diff-results/include-functions.txt || true
 
     - name: Upload diff artifact
       uses: actions/upload-artifact@v4
       with:
-        name: ack-kernel-diff-5.4-vs-5.10
+        name: ack-include-diff-5.4-vs-5.10
         path: diff-results/
